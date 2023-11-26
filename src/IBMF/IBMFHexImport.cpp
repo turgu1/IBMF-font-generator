@@ -1,6 +1,45 @@
 #include "IBMFHexImport.hpp"
 
 #include <iomanip>
+#include <map>
+
+enum Position { NONE, LEFT, RIGHT, CENTER };
+
+using PositionList = std::map<char32_t, Position>;
+
+PositionList positionList = {
+  { U'\U00002025', NONE  },
+  { U'\U00002014', NONE  },
+  { U'\U00002013', NONE  },
+  { U'\U0000005F', NONE  },
+  { U'\U0000005F', NONE  },
+  { U'\U00000028', NONE  },
+  { U'\U00000029', NONE  },
+  { U'\U0000007B', NONE  },
+  { U'\U0000007D', NONE  },
+  { U'\U00003014', RIGHT },
+  { U'\U00003015', LEFT  },
+  { U'\U00003010', RIGHT },
+  { U'\U00003011', LEFT  },
+  { U'\U0000300A', RIGHT },
+  { U'\U0000300B', LEFT  },
+  { U'\U00003008', RIGHT },
+  { U'\U00003009', LEFT  },
+  { U'\U0000300C', RIGHT },
+  { U'\U0000300D', LEFT  },
+  { U'\U0000300E', RIGHT },
+  { U'\U0000300F', LEFT  },
+  { U'\U0000FE51', LEFT  },
+  { U'\U0000005B', NONE  },
+  { U'\U0000005D', NONE  },
+  { U'\U0000203E', NONE  },
+  { U'\U0000203E', NONE  },
+  { U'\U0000203E', NONE  },
+  { U'\U0000203E', NONE  },
+  { U'\U0000005F', NONE  },
+  { U'\U0000005F', NONE  },
+  { U'\U0000005F', NONE  }
+};
 
 auto IBMFHexImport::readCodePoint(std::fstream &in, char32_t &codePoint,
                                   uint32_t &firstBytes) -> bool {
@@ -34,7 +73,7 @@ auto IBMFHexImport::readCodePoint(std::fstream &in, char32_t &codePoint,
 }
 
 auto IBMFHexImport::readOneGlyph(std::fstream &in, char32_t &codePoint,
-                                 BitmapPtr bitmap, int8_t &vOffset,
+                                 BitmapPtr bitmap, int8_t &hOffset, int8_t &vOffset,
                                  uint16_t &advance) -> GlyphCode {
   int i;
   auto hex = [](char a) -> uint8_t {
@@ -167,6 +206,13 @@ auto IBMFHexImport::readOneGlyph(std::fstream &in, char32_t &codePoint,
       return NO_GLYPH_CODE;
     }
 
+    auto posit = positionList.find(codePoint);
+    if ((posit != positionList.end()) && (posit->second == RIGHT)) {
+      hOffset = - (advance - bitmap->dim.width - 1);
+    } else {
+      hOffset = 0;
+    }
+
     return glyphCode;
   } else {
 
@@ -179,6 +225,7 @@ auto IBMFHexImport::readOneGlyph(std::fstream &in, char32_t &codePoint,
     bitmap->dim = Dim(0, 0);
     bitmap->pixels.clear();
     vOffset = 0;
+    hOffset = 0;
     return SPACE_CODE;
   }
 
@@ -313,11 +360,11 @@ auto IBMFHexImport::loadHex(std::string filename, UBlocks &uBlocs) -> bool {
     while (!in.eof()) {
       char32_t codePoint;
       auto bitmap = BitmapPtr(new Bitmap());
-      int8_t vOffset;
+      int8_t hOffset, vOffset;
       GlyphCode glyphCode;
       uint16_t advance;
 
-      if ((glyphCode = readOneGlyph(in, codePoint, bitmap, vOffset, advance)) !=
+      if ((glyphCode = readOneGlyph(in, codePoint, bitmap, hOffset, vOffset, advance)) !=
           NO_GLYPH_CODE) {
 
         face->bitmaps.push_back(bitmap);
@@ -348,7 +395,7 @@ auto IBMFHexImport::loadHex(std::string filename, UBlocks &uBlocs) -> bool {
         GlyphInfoPtr glyphInfo = GlyphInfoPtr(new GlyphInfo(GlyphInfo{
             .bitmapWidth = static_cast<uint8_t>(bitmap->dim.width),
             .bitmapHeight = static_cast<uint8_t>(bitmap->dim.height),
-            .horizontalOffset = static_cast<int8_t>(0),
+            .horizontalOffset = static_cast<int8_t>(hOffset),
             .verticalOffset = static_cast<int8_t>(vOffset),
             .packetLength =
                 static_cast<uint16_t>(bitmap->dim.width * bitmap->dim.height),

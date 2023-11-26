@@ -7,9 +7,46 @@
 #include "IBMF/UTF8Iterator.hpp"
 
 using CharsList = std::map<char32_t, uint32_t>;
+using TransList = std::map<char32_t, char32_t>;
 
 std::shared_ptr<EPubFile> ePubFile;
 CharsList charsList;
+
+TransList transList = {
+  { U'\U0000FE30', U'\U00002025'},
+  { U'\U0000FE31', U'\U00002014'},
+  { U'\U0000FE32', U'\U00002013'},
+  { U'\U0000FE33', U'\U0000005F'},
+  { U'\U0000FE34', U'\U0000005F'},
+  { U'\U0000FE35', U'\U00000028'},
+  { U'\U0000FE36', U'\U00000029'},
+  { U'\U0000FE37', U'\U0000007B'},
+  { U'\U0000FE38', U'\U0000007D'},
+  { U'\U0000FE39', U'\U00003014'},
+  { U'\U0000FE3A', U'\U00003015'},
+  { U'\U0000FE3B', U'\U00003010'},
+  { U'\U0000FE3C', U'\U00003011'},
+  { U'\U0000FE3D', U'\U0000300A'},
+  { U'\U0000FE3E', U'\U0000300B'},
+  { U'\U0000FE3F', U'\U00003008'},
+  { U'\U0000FE40', U'\U00003009'},
+  { U'\U0000FE41', U'\U0000300C'},
+  { U'\U0000FE42', U'\U0000300D'},
+  { U'\U0000FE43', U'\U0000300E'},
+  { U'\U0000FE44', U'\U0000300F'},
+  { U'\U0000FE45', U'\U0000FE51'},
+  { U'\U0000FE47', U'\U0000005B'},
+  { U'\U0000FE48', U'\U0000005D'},
+  { U'\U0000FE49', U'\U0000203E'},
+  { U'\U0000FE4A', U'\U0000203E'},
+  { U'\U0000FE4B', U'\U0000203E'},
+  { U'\U0000FE4C', U'\U0000203E'},
+  { U'\U0000FE4D', U'\U0000005F'},
+  { U'\U0000FE4E', U'\U0000005F'},
+  { U'\U0000FE4F', U'\U0000005F'}
+};
+
+
 
 UBlocks myUBlocks;
 IBMFHexImport ibmfHexImport;
@@ -30,11 +67,23 @@ void ParseFile(pugi::xml_document &doc) {
               (ch != ibmf_defs::ZERO_WIDTH_CODEPOINT) &&
               (ch != ibmf_defs::UNKNOWN_CODEPOINT) &&
               !((ch >= 0xFFF0) && (ch <= 0xFFFF))) {
+
             auto entry = list->find(ch);
             if (entry != list->end()) {
               entry->second++;
             } else {
               (*list)[ch] = 1;
+            }
+
+            auto trans = transList.find(ch);
+            if (trans != transList.end()) {
+              char32_t ch2 = trans->second;
+              auto entry = list->find(ch2);
+              if (entry != list->end()) {
+                entry->second++;
+              } else {
+                (*list)[ch2] = 1;
+              }
             }
           }
         }
@@ -133,10 +182,10 @@ auto main(int argc, char **argv) -> int {
   // }
 
   ePubFile =
-      std::make_shared<EPubFile>(argc == 3 ? argv[2] : "./V1010490321.epub");
+      std::make_shared<EPubFile>(argc == 3 ? argv[2] : "./V1010490321 - original.epub");
 
   if (ePubFile->isOpen()) {
-    log_i("File %s is open", argc == 3 ? argv[2] : "./V1010490321.epub");
+    log_i("File %s is open", argc == 3 ? argv[2] : "./V1010490321 - original.epub");
     if (ScanDocument()) {
       log_i("Scan completed! Characters Count: %" PRIu32,
             (uint32_t)charsList.size());

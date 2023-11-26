@@ -15,7 +15,7 @@ public:
   auto readCodePoint(std::fstream &in, char32_t &codePoint,
                      uint32_t &firstBytes) -> bool;
   auto readOneGlyph(std::fstream &in, char32_t &codePoint, BitmapPtr bitmap,
-                    int8_t &vOffset, uint16_t &advance) -> GlyphCode;
+                    int8_t &hOffset, int8_t &vOffset, uint16_t &advance) -> GlyphCode;
   auto loadHex(std::string filename, UBlocks &uBlocks) -> bool;
 };
 
