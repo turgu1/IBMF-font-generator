@@ -164,21 +164,30 @@ void BuildUBlocks() {
   std::cout << "[The End]" << std::endl;
 }
 
-auto LoadXHTMLAt(Idx fileIdx) -> pugi::xml_document & {
-  const EPubOpf::SpineItem &spineItem = ePubFile->getSpine(fileIdx);
-  return ePubFile->getXHTMLFile(spineItem.item->href);
-}
+auto LoadXHTMLAt(std::string &href) -> pugi::xml_document & { return ePubFile->getXHTMLFile(href); }
 
 auto ScanDocument() -> bool {
-  for (Idx fileIdx = 0; fileIdx < ePubFile->getSpineCount(); fileIdx++) {
-    pugi::xml_document &doc = LoadXHTMLAt(fileIdx);
+  auto manifest = ePubFile->getManifest();
+  for (auto &manifestItem : manifest) {
+    if (manifestItem.second.mediaType == "application/xhtml+xml") {
+      pugi::xml_document &doc = LoadXHTMLAt(manifestItem.second.href);
 
-    if (doc) {
-      ParseFile(doc);
-    } else {
-      return false;
+      if (doc) {
+        ParseFile(doc);
+      } else {
+        return false;
+      }
     }
   }
+  // for (Idx fileIdx = 0; fileIdx < ePubFile->getSpineCount(); fileIdx++) {
+  //   pugi::xml_document &doc = LoadXHTMLAt(fileIdx);
+
+  //   if (doc) {
+  //     ParseFile(doc);
+  //   } else {
+  //     return false;
+  //   }
+  // }
 
   return true;
 }

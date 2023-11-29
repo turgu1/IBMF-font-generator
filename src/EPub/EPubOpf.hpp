@@ -9,47 +9,50 @@
 
 class EPubOpf {
 public:
-    EPubOpf(const char *path) : path_(path) {}
+  EPubOpf(const char *path) : path_(path) {}
 
-    void parse(const std::shared_ptr<uint8_t[]> &buffer, uint32_t length);
+  void parse(const std::shared_ptr<uint8_t[]> &buffer, uint32_t length);
 
-    struct ManifestItem {
-        std::string href;
-        std::string mediaType;
-    };
+  struct ManifestItem {
+    std::string href;
+    std::string mediaType;
+  };
 
-    struct SpineItem {
-        ManifestItem *item;
-    };
+  struct SpineItem {
+    ManifestItem *item;
+  };
 
-    [[nodiscard]] auto getSpine(Idx idx) const -> const SpineItem & { return spine_[idx]; }
+  using ManifestMap = std::unordered_map<std::string, ManifestItem>;
 
-    [[nodiscard]] auto getFullPath(const std::string &fileName) const -> std::string {
-        return basePath_ + fileName;
-    }
+  [[nodiscard]] auto getSpine(Idx idx) const -> const SpineItem & { return spine_[idx]; }
+  [[nodiscard]] auto getManifestMap() const -> const ManifestMap & { return manifest_; }
 
-    [[nodiscard]] inline auto getSpineCount() const -> uint16_t { return spine_.size(); }
+  [[nodiscard]] auto getFullPath(const std::string &fileName) const -> std::string {
+    return basePath_ + fileName;
+  }
 
-    void extractPath(const char *fname, std::string &path);
+  [[nodiscard]] inline auto getSpineCount() const -> uint16_t { return spine_.size(); }
+  [[nodiscard]] inline auto getManifestCount() const -> uint16_t { return manifest_.size(); }
 
-    auto getSpineIdx(const std::string &href) const -> int;
+  void extractPath(const char *fname, std::string &path);
 
-    auto exists(const std::string &id) const -> bool;
+  auto getSpineIdx(const std::string &href) const -> int;
 
-    auto getHrefByID(const std::string &id) const -> std::string;
-    auto getIdByHref(const std::string &href) const -> std::string;
+  auto exists(const std::string &id) const -> bool;
+
+  auto getHrefByID(const std::string &id) const -> std::string;
+  auto getIdByHref(const std::string &href) const -> std::string;
 
 private:
-    const char *path_;
+  const char *path_;
 
-    std::string basePath_;
+  std::string basePath_;
 
-    using ManifestMap = std::unordered_map<std::string, ManifestItem>;
-    using ManifestIterator = std::unordered_map<std::string, ManifestItem>::iterator;
-    using SpineVector = std::vector<SpineItem>;
+  using ManifestIterator = std::unordered_map<std::string, ManifestItem>::iterator;
+  using SpineVector      = std::vector<SpineItem>;
 
-    std::string title_;
-    std::string creator_;
-    ManifestMap manifest_;
-    SpineVector spine_;
+  std::string title_;
+  std::string creator_;
+  ManifestMap manifest_;
+  SpineVector spine_;
 };
