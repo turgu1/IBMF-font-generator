@@ -200,20 +200,20 @@ auto main(int argc, char **argv) -> int {
 
   int status = 0;
 
-  // if (argc != 3) {
-  //     Usage(argv[0]);
-  //     return -1;
-  // }
+  if (argc != 3) {
+      Usage(argv[0]);
+      return -1;
+  }
 
-  ePubFile = std::make_shared<EPubFile>(argc == 3 ? argv[2] : "./V1010490321 - original.epub");
+  ePubFile = std::make_shared<EPubFile>(argv[2]);
 
   if (ePubFile->isOpen()) {
-    log_i("File %s is open", argc == 3 ? argv[2] : "./V1010490321 - original.epub");
+    log_i("File %s is open", argv[2]);
     if (ScanDocument()) {
       log_i("Scan completed! Characters Count: %" PRIu32, (uint32_t)charsList.size());
       ShowCharsList();
       BuildUBlocks();
-      ibmfHexImport.loadHex(argc == 3 ? argv[2] : "./unifont-15.1.04.hex", myUBlocks);
+      ibmfHexImport.loadHex(argv[1], myUBlocks);
 
       std::fstream out;
       out.open("font.ibmf", std::ios::out);
@@ -228,7 +228,7 @@ auto main(int argc, char **argv) -> int {
       log_e("Unable to complete document scan");
     }
   } else {
-    log_e("Unable to open file %s", argc == 3 ? argv[2] : "./V1010490321.epub");
+    log_e("Unable to open file %s", argv[2]);
     status = -2;
   }
 
